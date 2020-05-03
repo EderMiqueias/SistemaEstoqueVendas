@@ -1,0 +1,11 @@
+{% extends "layout.html" %} {% load bootstrap4 %}
+<!---->
+{% block content %}
+<h1>Registrar Venda</h1>
+{% bootstrap_messages %}
+<form action="{% url 'vender' %}" method="post" class="form" autocomplete="off">
+  {% csrf_token %} {% bootstrap_form form %} {% buttons %}
+  <button type="submit" class="btn btn-primary">Registrar</button>
+  {% endbuttons %}
+</form>
+{% bootstrap_javascript jquery='full' %} {% endblock %}

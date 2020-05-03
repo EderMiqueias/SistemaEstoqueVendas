@@ -1,0 +1,22 @@
+{% extends "layout.html" %} {% load bootstrap4 %}
+<!---->
+{% block content %}
+<h1>Cadastrar Produtos</h1>
+{% bootstrap_messages %}
+<form
+  action="{% url 'cadastrar' %}"
+  method="post"
+  class="form"
+  autocomplete="off"
+  enctype="multipart/form-data"
+>
+  {% csrf_token %}
+  {% bootstrap_form form %}
+  <div class="form-group">
+    {{ formimagem.imagem }}
+  </div>
+  {% buttons %}
+    <button type="submit" class="btn btn-primary">Cadastrar</button>
+  {% endbuttons %}
+</form>
+{% bootstrap_javascript jquery='full' %} {% endblock %}

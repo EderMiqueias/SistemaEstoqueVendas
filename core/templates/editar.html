@@ -1,0 +1,31 @@
+{% extends "layout.html" %} {% load bootstrap4 %}
+<!---->
+{% block content %}
+<h1>Editar Produtos</h1>
+{% bootstrap_messages %}
+<form action="{% url 'editar' %}" method="post" class="form" autocomplete="off">
+  {% csrf_token %} {% bootstrap_form formbusca %} {% buttons %}
+  <button type="submit" class="btn btn-primary">Buscar</button>
+  {% endbuttons %}
+</form>
+{% if found %}
+<form
+  action="{% url 'editar' %}"
+  method="post"
+  class="form"
+  autocomplete="off"
+  enctype="multipart/form-data"
+>
+  {% csrf_token %} {% bootstrap_form formproduto %}
+  <div class="form-group">
+    {{ formimagem.imagem }}
+  </div>
+  <input type="hidden" name="old_name" value="{{ nome }}" />
+  {% buttons %}
+  <a href="{% url 'deletar' nome %}">
+    <button type="button" class="btn btn-danger">Deletar Produto</button>
+  </a>
+  <button type="submit" class="btn btn-success">Salvar Alterações</button>
+  {% endbuttons %}
+</form>
+{% endif %} {% bootstrap_javascript jquery='full' %} {% endblock %}

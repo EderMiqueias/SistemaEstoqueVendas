@@ -1,0 +1,16 @@
+{% extends "layout.html" %} {% load static %}
+<!---->
+{% block content %}
+<h3>Resumo do Mês</h3>
+<img
+  src="{% static 'images/grafico_mensal.png' %}"
+  class="img-fluid"
+  alt="Resumo do Mes"
+/>
+<h3>Resumo Anual</h3>
+<img
+  src="{% static 'images/grafico_anual.png' %}"
+  class="img-fluid"
+  alt="Resumo anual"
+/>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "layout.html" %} {% load bootstrap4 %} {% load static %}
+<!---->
+{% block content %}
+<h1>Buscar Produtos</h1>
+{% bootstrap_messages %}
+<form action="{% url 'buscar' %}" method="post" class="form" autocomplete="off">
+  {% csrf_token %} {% bootstrap_form form %} {% buttons %}
+  <button type="submit" class="btn btn-primary">Buscar</button>
+  {% endbuttons %}
+</form>
+{% if produto %}
+<div class="card border-primary mb-3" style="width: 18rem;">
+  <img
+    class="card-img-top"
+    src="{% url 'media' produto.imagem.src %}"
+    alt="Imagem do Produto"
+    height="180px"
+    width="286px"
+  />
+  <div class="card-body text-dark">
+    <h5 class="card-title">{{ produto.nome }}</h5>
+    <p class="card-text">
+      R${{ produto.preco }} <br />
+      Em estoque: {{ produto.quant }}<br />
+      Quantidade Minima: {{ produto.quant_minima }}
+    </p>
+  </div>
+</div>
+{% endif %} {% bootstrap_javascript jquery='full' %} {% endblock %}
