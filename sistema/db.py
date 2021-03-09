@@ -6,5 +6,5 @@ client = pymongo.MongoClient(host=url, port=port)
 
 
 def getdb():
-    db = client['sistemaestoquevendas']
+    db = client['sistema_estoque_vendas_prod']
     return db

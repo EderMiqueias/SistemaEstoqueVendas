@@ -10,6 +10,12 @@ pip install --upgrade pip setuptools
 pip install -r requirements.txt
 ```
 
+### Migração
+
+```shel
+python manage.py migrate
+```
+
 ### Execução
 
 ```shel
@@ -23,6 +29,12 @@ gunicorn --bind 127.0.0.1:8000 sistema.wsgi
 pip install --upgrade pip setuptools
 pip install -r requirements.txt
 pip install waitress
+```
+
+### Migração
+
+```shel
+python manage.py migrate
 ```
 
 ### Execução

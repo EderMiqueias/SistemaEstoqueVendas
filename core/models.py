@@ -1,5 +1,6 @@
 from datetime import datetime
 from django.db import models
+
 from PIL import Image
 import shutil
 import os
@@ -8,6 +9,7 @@ import os
 class Imagem(models.Model):
     imagem = models.ImageField()
     titulo = None
+
     # for linux
     src_root = 'media/images/'
 

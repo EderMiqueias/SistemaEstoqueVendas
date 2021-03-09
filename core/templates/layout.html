@@ -15,10 +15,12 @@
         <nav class="navbar navbar-expand-lg bg-primary navbar-light bg-light">
           <a class="navbar-brand" href="{% url 'index' %}">Home</a>
           <a class="navbar-brand" href="{% url 'vender' %}">Vender</a>
-          <a class="navbar-brand" href="{% url 'cadastrar' %}">Cadastrar</a>
           <a class="navbar-brand" href="{% url 'buscar' %}">Buscar</a>
-          <a class="navbar-brand" href="{% url 'editar' %}">Editar</a>
           <a class="navbar-brand" href="{% url 'listar' %}">Listar</a>
+          <a class="navbar-brand" href="{% url 'cadastrar' %}">Cadastrar*</a>
+          <a class="navbar-brand" href="{% url 'editar' %}">Editar*</a>
+          <a class="navbar-brand" href="/admin">ADM*</a>
+          <a class="navbar-brand" href="{% url 'logout' %}">Sair</a>
         </nav>
         <hr />
       </header>

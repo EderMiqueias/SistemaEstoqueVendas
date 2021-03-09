@@ -1,15 +1,45 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
+
+from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth.decorators import login_required, permission_required
+
 from .models import Produto, Imagem
-from .forms import ProdutoModelForm, VenderModelForm, BuscarModelForm, getdb, ImagemModelForm
+from .forms import ProdutoModelForm, VenderModelForm, BuscarModelForm, ImagemModelForm
 from .views_func import add_estado, gerar_grafico_mensal, gerar_grafico_anual
+from sistema.db import getdb
+
 from operator import attrgetter
 
 
+def logar_usuario(request):
+    erro = False
+    if str(request.method) == 'POST':
+        username = request.POST['username']
+        pwd = request.POST['pwd']
+        user = authenticate(request, username=username, password=pwd)
+        if user is not None:
+            login(request, user)
+            return redirect('index')
+        erro = True
+    context = {"erro": erro}
+    return render(request, "login.html", context)
+
+
+@login_required(login_url='/login')
+def deslogar_usuario(request):
+    logout(request)
+    return redirect("login")
+
+
+@login_required(login_url='/login')
 def index(request):
+    gerar_grafico_mensal()
+    gerar_grafico_anual()
     return render(request, "index.html")
 
 
+@login_required(login_url='/login')
 def vender(request):
     formvenda = VenderModelForm(request.POST or None)
     if str(request.method) == "POST":
@@ -30,6 +60,7 @@ def vender(request):
     return render(request, "vender.html", context)
 
 
+@permission_required('', login_url='/admin/login/?next=/cadastrar/')
 def cadastrar(request):
     formproduto = ProdutoModelForm(request.POST or None)
     formimagem = ImagemModelForm(request.FILES or None)
@@ -53,6 +84,7 @@ def cadastrar(request):
     return render(request, "cadastrar.html", context)
 
 
+@login_required(login_url='/login')
 def buscar(request):
     formbusca = BuscarModelForm(request.POST or None)
     produto = None
@@ -70,6 +102,7 @@ def buscar(request):
     return render(request, "buscar.html", context)
 
 
+@permission_required('', login_url='/admin/login/?next=/editar/')
 def editar(request):
     formbusca = BuscarModelForm(request.POST or None)
     formproduto = ProdutoModelForm(request.POST or None)
@@ -117,6 +150,7 @@ def editar(request):
     return render(request, "editar.html", context)
 
 
+@login_required(login_url='/login')
 def listar(request):
     db = getdb()
     importacoes = db.produtos.find()
@@ -131,6 +165,7 @@ def listar(request):
     return render(request, "listar.html", context)
 
 
+@permission_required('', login_url='/admin/login/?next=/deletar/')
 def deletar(request, pk):
     db = getdb()
     db.produtos.delete_one({'nome': pk})
