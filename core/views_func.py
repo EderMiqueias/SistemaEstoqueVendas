@@ -69,7 +69,7 @@ def gerar_grafico_mensal():
     plt.title("Vendas do Mês")
     plt.ylabel("Apurado em R$")
     plt.xlabel("Dia")
-    plt.savefig('staticroot/images/grafico_mensal.png',
+    plt.savefig('staticfiles/images/grafico_mensal.png',
                 transparent=True, orientation='landscape')
 
 
@@ -106,5 +106,5 @@ def gerar_grafico_anual():
     plt.title("Vendas Este Ano")
     plt.ylabel("Apurado em R$")
     plt.xticks(rotation=30)
-    plt.savefig('staticroot/images/grafico_anual.png',
+    plt.savefig('staticfiles/images/grafico_anual.png',
                 transparent=True, orientation='landscape')
