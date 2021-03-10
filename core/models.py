@@ -41,6 +41,9 @@ class Produto:
         self.quant_minima = quant_minima
         self.imagem = self.load_image()
 
+    def __str__(self):
+        return "Produto: " + self.nome + " - " + self.preco + " - " + self.quant
+
     def load_image(self):
         try:
             src = f'images/{self.nome}.png'
@@ -87,6 +90,9 @@ class Venda:
             self.data = data
         else:
             self.data = datetime.now().strftime('%d%m%Y')
+
+    def __str__(self):
+        return "Venda: " + self.nome_produto + " - " + self.quant + " - " + self.data
 
     def to_json(self):
         return {

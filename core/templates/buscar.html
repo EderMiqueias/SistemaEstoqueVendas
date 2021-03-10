@@ -8,8 +8,11 @@
   <button type="submit" class="btn btn-primary">Buscar</button>
   {% endbuttons %}
 </form>
-{% if produto %}
-<div class="card border-primary mb-3" style="width: 18rem;">
+{% for produto in produtos %}
+<div
+  class="card border-{{ produto.estado }} mb-3"
+  style="width: 18rem; float: left; margin: 1%;"
+>
   <img
     class="card-img-top"
     src="{% url 'media' produto.imagem.src %}"
@@ -17,7 +20,7 @@
     height="180px"
     width="286px"
   />
-  <div class="card-body text-dark">
+  <div class="card-body text-{{ produto.estado }}">
     <h5 class="card-title">{{ produto.nome }}</h5>
     <p class="card-text">
       R${{ produto.preco }} <br />
@@ -26,4 +29,5 @@
     </p>
   </div>
 </div>
-{% endif %} {% bootstrap_javascript jquery='full' %} {% endblock %}
+{% endfor %}
+{% bootstrap_javascript jquery='full' %} {% endblock %}

@@ -5,7 +5,7 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required, permission_required
 
 from .models import Produto, Imagem
-from .forms import ProdutoModelForm, VenderModelForm, BuscarModelForm, ImagemModelForm
+from .forms import ProdutoModelForm, VenderModelForm, BuscarModelForm, ImagemModelForm, get_produtos_produto
 from .views_func import add_estado, gerar_grafico_mensal, gerar_grafico_anual
 from sistema.db import getdb
 
@@ -87,17 +87,19 @@ def cadastrar(request):
 @login_required(login_url='/login')
 def buscar(request):
     formbusca = BuscarModelForm(request.POST or None)
-    produto = None
+    produtos = None
     if str(request.method) == "POST":
         if formbusca.is_valid():
-            if formbusca.checagem() != 404:
-                produto = formbusca.get_produto()
+            produtos = formbusca.get_produtos()
+            if produtos:
                 formbusca = BuscarModelForm()
+                produtos = list(map(add_estado, produtos))
+                produtos.sort(key=attrgetter('nome'))
             else:
                 messages.error(request, "Produto Não Encontrado")
     context = {
         'form': formbusca,
-        'produto': produto
+        'produtos': produtos
     }
     return render(request, "buscar.html", context)
 
@@ -152,12 +154,7 @@ def editar(request):
 
 @login_required(login_url='/login')
 def listar(request):
-    db = getdb()
-    importacoes = db.produtos.find()
-    produtos = list()
-    for mapa in importacoes:
-        produtos.append(Produto.from_json(mapa))
-    produtos = list(map(add_estado, produtos))
+    produtos = list(map(add_estado, get_produtos_produto("")))
     produtos.sort(key=attrgetter('nome'))
     context = {
         'produtos': produtos

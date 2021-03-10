@@ -49,6 +49,7 @@ class ProdutoModelForm(forms.Form):
         self.db.produtos.insert_one(
             produto.to_json()
         )
+
     def checagem(self):
         return checar_produto(self.cleaned_data['nome'])
 
@@ -57,6 +58,22 @@ def get_produto_json(nome_produto):
     collect = getdb()['produtos']
     produto = collect.find_one({"nome": nome_produto})
     return produto
+
+
+def get_produtos_json(nome_produto):
+    collect = getdb()['produtos']
+    produtos = list(filter(lambda x: f"{nome_produto}" in x["nome"], list(collect.find())))
+    return produtos
+
+
+def get_produtos_produto(nome_produto):
+    produtos = list(
+        map(
+            lambda x: Produto.from_json(x),
+            get_produtos_json(nome_produto)
+        )
+    )
+    return produtos
 
 
 def checar_produto(nome_produto, quant=-1):
@@ -77,6 +94,7 @@ class VenderModelForm(forms.Form):
     quant = ModeloIntegerField('Quantidade')
     desconto = ModeloDecimalField('Desconto em Reais', required=False)
     db = getdb()
+
     def registrar(self):
         produto_json = get_produto_json(self.cleaned_data['nome_produto'])
         quant = self.cleaned_data['quant']
@@ -95,13 +113,20 @@ class VenderModelForm(forms.Form):
         self.db.produtos.update_one(
                 {'nome': produto_json['nome']}, {"$set": produto_json}
             )
+
     def checagem(self):
         return checar_produto(self.cleaned_data['nome_produto'], int(self.cleaned_data['quant']))
 
 
 class BuscarModelForm(forms.Form):
     nome = ModeloCharField('Nome do Produto', 40)
+
     def get_produto(self):
         return Produto.from_json(get_produto_json(self.cleaned_data['nome']))
+
+    def get_produtos(self):
+        produtos = get_produtos_produto(self.cleaned_data['nome'])
+        return produtos
+
     def checagem(self):
         return checar_produto(self.cleaned_data['nome'])
