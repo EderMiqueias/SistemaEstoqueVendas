@@ -21,7 +21,23 @@
     width="286px"
   />
   <div class="card-body text-{{ produto.estado }}">
-    <h5 class="card-title">{{ produto.nome }}</h5>
+    <form
+      action="{% url 'editar' %}"
+      method="post"
+      class="form"
+      autocomplete="off"
+      enctype="multipart/form-data"
+    >
+      {% csrf_token %}
+      <input
+      type="submit"
+      class="card-title"
+      name="nome"
+      value="{{ produto.nome }}*"
+      id="id_nome"
+      height="5%"
+      >
+    </form>
     <p class="card-text">
       R${{ produto.preco }} <br />
       Em estoque: {{ produto.quant }}<br />
