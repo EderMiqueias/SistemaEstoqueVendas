@@ -1,9 +1,11 @@
+from .models import Venda
+
 import matplotlib.pyplot as plt
-from sistema.db import getdb
-from .models import datetime
+from datetime import datetime
 
 
 def add_estado(item):
+    item.load_image()
     if item.quant > item.quant_minima:
         item.estado = 'primary'
     elif item.quant == item.quant_minima:
@@ -14,7 +16,7 @@ def add_estado(item):
 
 
 def get_vendas():
-    return getdb()["vendas"]
+    return Venda.objects.all()
 
 
 def get_mes_atual():
@@ -46,11 +48,12 @@ def gerar_dict_mes():
 def gerar_lista_mes_valores():
     mes_atual = get_mes_atual()
     dias_mes = gerar_dict_mes()
-    vendas = list(get_vendas().find())
+    vendas = get_vendas()
+    vendas_json = list(map(lambda x: x.to_json(), vendas))
     vendas_mes_atual = list(
-        filter(lambda i: i['data'][2:4] == mes_atual, vendas))
+        filter(lambda i: i['criado'].strftime("%m") == mes_atual, vendas_json))
     for item in vendas_mes_atual:
-        dia = item['data'][0:2]
+        dia = item['criado'].strftime("%d")
         dias_mes[dia] += item['valor']
     lista_valores = list()
     for item in dias_mes:
@@ -85,11 +88,12 @@ def gerar_dict_ano():
 def gerar_lista_ano_valores():
     ano_atual = get_ano_atual()
     ano_dict = gerar_dict_ano()
-    vendas = list(get_vendas().find())
+    vendas = get_vendas()
+    vendas_json = list(map(lambda x: x.to_json(), vendas))
     vendas_ano_atual = list(
-        filter(lambda i: i['data'][4:8] == ano_atual, vendas))
+        filter(lambda i: i['criado'].strftime("%Y") == ano_atual, vendas_json))
     for item in vendas_ano_atual:
-        mes = item['data'][2:4]
+        mes = item['criado'].strftime("%m")
         ano_dict[mes] += item['valor']
     lista_valores = list()
     for item in ano_dict:

@@ -5,11 +5,11 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required, permission_required
 
 from .models import Produto, Imagem
-from .forms import ProdutoModelForm, VenderModelForm, BuscarModelForm, ImagemModelForm, get_produtos_produto
+from .forms import ProdutoModelForm, VendaModelForm, BuscarModelForm, ImagemModelForm
 from .views_func import add_estado, gerar_grafico_mensal, gerar_grafico_anual
-from sistema.db import getdb
 
 from operator import attrgetter
+from threading import Thread
 
 
 def logar_usuario(request):
@@ -34,26 +34,34 @@ def deslogar_usuario(request):
 
 @login_required(login_url='/login')
 def index(request):
-    gerar_grafico_mensal()
-    gerar_grafico_anual()
+    t_mes = Thread(gerar_grafico_mensal())
+    t_ano = Thread(gerar_grafico_anual())
+    t_mes.start()
+    t_ano.start()
     return render(request, "index.html")
 
 
 @login_required(login_url='/login')
 def vender(request):
-    formvenda = VenderModelForm(request.POST or None)
+    formvenda = VendaModelForm(request.POST or None)
     if str(request.method) == "POST":
         if formvenda.is_valid():
-            if formvenda.checagem() == 200:
-                formvenda.registrar()
-                formvenda = VenderModelForm()
-                messages.success(request, "Venda Realizada com Sucesso")
-                gerar_grafico_mensal()
-                gerar_grafico_anual()
-            elif formvenda.checagem() == 404:
-                messages.error(request, "Venda Não Realizada, Produto não Encontrado")
-            elif formvenda.checagem() == 500:
-                messages.error(request, "Venda Não Realizada, Quantidade Insuficiente para este Produto")
+            formvenda.save()
+            formvenda = VendaModelForm()
+            messages.success(request, "Venda Realizada com Sucesso")
+
+            # if formvenda.checagem() == 200:
+            #     formvenda.registrar()
+            #     formvenda = VenderModelForm()
+            #     messages.success(request, "Venda Realizada com Sucesso")
+            #     gerar_grafico_mensal()
+            #     gerar_grafico_anual()
+            # elif formvenda.checagem() == 404:
+            #     messages.error(request, "Venda Não Realizada, Produto não Encontrado")
+            # elif formvenda.checagem() == 500:
+            #     messages.error(request, "Venda Não Realizada, Quantidade Insuficiente para este Produto")
+        else:
+            messages.error(request, "Venda Não Realizada")
     context = {
         'form': formvenda
     }
@@ -71,12 +79,11 @@ def cadastrar(request):
                 imagem.titulo = request.POST['nome']
                 imagem.salvar()
                 formimagem = ImagemModelForm()
-            if formproduto.checagem() == 404:
-                formproduto.salvar()
-                formproduto = ProdutoModelForm()
-                messages.success(request, "Produto cadastrado com Sucesso")
-            else:
-                messages.error(request, "Produto de Mesmo Nome já registrado")
+            formproduto.save()
+            formproduto = ProdutoModelForm()
+            messages.success(request, "Produto cadastrado com sucesso!")
+        else:
+            messages.error(request, "Produto não pode ser cadastrado.")
     context = {
         'form': formproduto,
         'formimagem': formimagem
@@ -114,23 +121,28 @@ def editar(request):
     if str(request.method) == "POST":
         if len(request.POST) == 2:
             if formbusca.is_valid():
-                if formbusca.checagem() != 404:
-                    produto = formbusca.get_produto()
-                    formproduto = ProdutoModelForm(produto.to_json())
+                if formbusca.get_produtos():
+                    produto_json = formbusca.get_produto_json()
+                    formproduto = ProdutoModelForm(produto_json)
                     formbusca = BuscarModelForm()
-                    nome = produto.nome
+                    nome = produto_json["nome"]
                     found = True
                 else:
                     messages.error(request, "Produto Não Encontrado")
         else:
             if formproduto.is_valid():
                 old_name = request.POST['old_name']
-                produto = Produto.from_json(request.POST)
-                formproduto = ProdutoModelForm(produto.to_json())
-                db = getdb()
-                db.produtos.update_one(
-                    {'nome': old_name}, {"$set": produto.to_json()}
-                )
+
+                formproduto = ProdutoModelForm(request.POST)
+                produto = Produto.objects.filter(nome=old_name)
+                if produto:
+                    produto = produto[0]
+                    produto.nome = request.POST["nome"]
+                    produto.preco = request.POST["preco"]
+                    produto.quant = request.POST["quant"]
+                    produto.quant_minima = request.POST["quant_minima"]
+                    produto.save()
+
                 messages.success(request, "Alterações Salvas")
                 if formimagem.is_valid():
                     imagem = Imagem(imagem=request.FILES['imagem'])
@@ -154,7 +166,7 @@ def editar(request):
 
 @login_required(login_url='/login')
 def listar(request):
-    produtos = list(map(add_estado, get_produtos_produto("")))
+    produtos = list(map(add_estado, Produto.objects.all()))
     produtos.sort(key=attrgetter('nome'))
     context = {
         'produtos': produtos
@@ -164,8 +176,7 @@ def listar(request):
 
 @permission_required('', login_url='/admin/login/?next=/deletar/')
 def deletar(request, pk):
-    db = getdb()
-    db.produtos.delete_one({'nome': pk})
+    Produto.objects.filter(nome=pk).delete()
     imagem = Imagem()
     imagem.titulo = pk
     try:

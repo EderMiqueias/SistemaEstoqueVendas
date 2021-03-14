@@ -1,25 +1,24 @@
 from django import forms
 from .models import Produto, Venda
-from sistema.db import getdb
 
 
 class ModeloCharField(forms.CharField):
-    def __init__(self, name, ml):
-        super().__init__(max_length=ml, label='', widget=forms.TextInput(
+    def __init__(self, name="", ml=50, **kwargs):
+        super().__init__(**kwargs, max_length=ml, label='', widget=forms.TextInput(
             attrs={'placeholder': f'{name}', 'style': 'margin: 1% 0'}
         ))
 
 
 class ModeloIntegerField(forms.IntegerField):
-    def __init__(self, name, required=True):
-        super().__init__(label='', required=required, widget=forms.TextInput(
+    def __init__(self, name="", required=True, **kwargs):
+        super().__init__(**kwargs, label='', required=required, widget=forms.TextInput(
             attrs={'placeholder': f'{name}', 'style': 'margin: 1% 0'}
         ))
 
 
 class ModeloDecimalField(forms.DecimalField):
-    def __init__(self, name, required=True):
-        super().__init__(label='', required=required, widget=forms.TextInput(
+    def __init__(self, name="", required=True, **kwargs):
+        super().__init__(**kwargs, label='', required=required, widget=forms.TextInput(
             attrs={'placeholder': f'{name}', 'style': 'margin: 1% 0'}
         ))
 
@@ -32,101 +31,72 @@ class ImagemModelForm(forms.Form):
     )
 
 
-class ProdutoModelForm(forms.Form):
-    nome = ModeloCharField('Nome', 50)
-    preco = ModeloDecimalField('Preço')
-    quant = ModeloIntegerField('Quantidade')
-    quant_minima = ModeloIntegerField('Quantidade Minima')
-    db = getdb()
-
-    def salvar(self):
-        produto = Produto(
-            nome=self.cleaned_data['nome'],
-            preco=float(self.cleaned_data['preco']),
-            quant=self.cleaned_data['quant'],
-            quant_minima=self.cleaned_data['quant_minima']
-        )
-        self.db.produtos.insert_one(
-            produto.to_json()
-        )
-
-    def checagem(self):
-        return checar_produto(self.cleaned_data['nome'])
-
-
 def get_produto_json(nome_produto):
-    collect = getdb()['produtos']
-    produto = collect.find_one({"nome": nome_produto})
-    return produto
+    produto = Produto.objects.filter(nome__icontains=nome_produto)
+    return produto[0].to_json() if produto else produto
 
 
 def get_produtos_json(nome_produto):
-    collect = getdb()['produtos']
-    produtos = list(filter(lambda x: f"{nome_produto}" in x["nome"], list(collect.find())))
+    produtos = list(filter(lambda x: f"{nome_produto}" in x.to_json()["nome"], list(Produto.objects.all())))
     return produtos
 
 
 def get_produtos_produto(nome_produto):
-    produtos = list(
-        map(
-            lambda x: Produto.from_json(x),
-            get_produtos_json(nome_produto)
-        )
-    )
-    return produtos
+    return Produto.objects.filter(nome__icontains=nome_produto)
 
 
 def checar_produto(nome_produto, quant=-1):
-    produto = get_produto_json(nome_produto)
+    produto_json = get_produto_json(nome_produto)
     if nome_produto == 'default':
         return 500
-    if produto:
-        produto = Produto.from_json(produto)
-        if int(produto.quant) >= quant:
+    if produto_json:
+        if int(produto_json["quant"]) >= quant:
             return 200
         else:
             return 500
     return 404
 
 
-class VenderModelForm(forms.Form):
-    nome_produto = ModeloCharField('Nome do Produto', 40)
-    quant = ModeloIntegerField('Quantidade')
-    desconto = ModeloDecimalField('Desconto em Reais', required=False)
-    db = getdb()
+class ProdutoModelForm(forms.ModelForm):
+    class Meta:
+        model = Produto
+        fields = ['nome', 'preco', 'quant', 'quant_minima']
+        labels = {
+            'nome': "",
+            'preco': "",
+            'quant': "",
+            'quant_minima': ""
+        }
+        help_texts = {
+            'nome': "Nome",
+            'preco': "Preço",
+            'quant': "Quantidade",
+            'quant_minima': "Quantidade Mínima"
+        }
 
-    def registrar(self):
-        produto_json = get_produto_json(self.cleaned_data['nome_produto'])
-        quant = self.cleaned_data['quant']
-        desconto = float(self.cleaned_data['desconto'] or 0)
-        valor = (produto_json['preco'] * quant) - desconto
-        venda = Venda(
-            nome_produto=produto_json['nome'],
-            valor=valor,
-            quant=quant,
-            desconto=desconto
-        )
-        produto_json['quant'] = int(produto_json['quant']) - venda.quant
-        self.db.vendas.insert_one(
-            venda.to_json()
-        )
-        self.db.produtos.update_one(
-                {'nome': produto_json['nome']}, {"$set": produto_json}
-            )
 
-    def checagem(self):
-        return checar_produto(self.cleaned_data['nome_produto'], int(self.cleaned_data['quant']))
+class VendaModelForm(forms.ModelForm):
+    class Meta:
+        model = Venda
+        fields = ['produto_id', 'quant', 'desconto']
+        labels = {
+            'produto_id': "",
+            'desconto': "",
+            'quant': "",
+        }
+        help_texts = {
+            'produto_id': "Produto",
+            'desconto': "Desconto",
+            'quant': "Quantidade",
+        }
 
 
 class BuscarModelForm(forms.Form):
-    nome = ModeloCharField('Nome do Produto', 40)
+    nome = ModeloCharField('Nome do Produto', 50)
 
-    def get_produto(self):
-        return Produto.from_json(get_produto_json(self.cleaned_data['nome']))
+    def get_produto_json(self):
+        return get_produto_json(self.cleaned_data['nome'])
 
     def get_produtos(self):
         produtos = get_produtos_produto(self.cleaned_data['nome'])
         return produtos
-
-    def checagem(self):
-        return checar_produto(self.cleaned_data['nome'])

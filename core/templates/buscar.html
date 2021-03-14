@@ -21,6 +21,14 @@
     width="286px"
   />
   <div class="card-body text-{{ produto.estado }}">
+    <div style="height: 3rem; overflow: auto;">
+      <b><p class="card-title">{{ produto.nome }}</p></b>
+    </div>
+    <p class="card-text">
+      R${{ produto.preco }} <br />
+      Em estoque: {{ produto.quant }}<br />
+      Quantidade Minima: {{ produto.quant_minima }}
+    </p>
     <form
       action="{% url 'editar' %}"
       method="post"
@@ -30,19 +38,13 @@
     >
       {% csrf_token %}
       <input
-      type="submit"
-      class="card-title"
+      type="hidden"
       name="nome"
-      value="{{ produto.nome }}*"
+      value="{{ produto.nome }}"
       id="id_nome"
-      height="5%"
       >
+      <button type="submit" class="btn btn-primary">Editar</button>
     </form>
-    <p class="card-text">
-      R${{ produto.preco }} <br />
-      Em estoque: {{ produto.quant }}<br />
-      Quantidade Minima: {{ produto.quant_minima }}
-    </p>
   </div>
 </div>
 {% endfor %}
