@@ -50,16 +50,6 @@ def vender(request):
             formvenda = VendaModelForm()
             messages.success(request, "Venda Realizada com Sucesso")
 
-            # if formvenda.checagem() == 200:
-            #     formvenda.registrar()
-            #     formvenda = VenderModelForm()
-            #     messages.success(request, "Venda Realizada com Sucesso")
-            #     gerar_grafico_mensal()
-            #     gerar_grafico_anual()
-            # elif formvenda.checagem() == 404:
-            #     messages.error(request, "Venda Não Realizada, Produto não Encontrado")
-            # elif formvenda.checagem() == 500:
-            #     messages.error(request, "Venda Não Realizada, Quantidade Insuficiente para este Produto")
         else:
             messages.error(request, "Venda Não Realizada")
     context = {
