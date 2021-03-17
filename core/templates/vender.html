@@ -1,11 +1,17 @@
-{% extends "layout.html" %} {% load bootstrap4 %}
+{% extends "layout.html" %} {% load bootstrap4 %} {% load static %}
 <!---->
 {% block content %}
 <h1>Registrar Venda</h1>
 {% bootstrap_messages %}
 <form action="{% url 'vender' %}" method="post" class="form" autocomplete="off">
-  {% csrf_token %} {% bootstrap_form form %} {% buttons %}
+  {% csrf_token %} {% bootstrap_form form %}
+  <input type="hidden" name="user_id" required="" id="id_user">
+  {% buttons %}
   <button type="submit" class="btn btn-primary">Registrar</button>
   {% endbuttons %}
 </form>
+<script>
+  document.getElementById("id_desconto").value = 0;
+  document.getElementById("id_quant").value = 1;
+</script>
 {% bootstrap_javascript jquery='full' %} {% endblock %}

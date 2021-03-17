@@ -1,7 +1,11 @@
+from django.conf import settings
+
 from .models import Venda
 
 import matplotlib.pyplot as plt
+
 from datetime import datetime
+import os
 
 
 def add_estado(item):
@@ -61,7 +65,9 @@ def gerar_lista_mes_valores():
     return lista_valores
 
 
-def gerar_grafico_mensal():
+def gerar_grafico_mensal(user_creator):
+    path = "core" + settings.STATIC_URL if settings.DEBUG else str(settings.STATIC_ROOT) + "/"
+
     valores = gerar_lista_mes_valores()
     dias = list()
     for x in gerar_dict_mes():
@@ -69,11 +75,16 @@ def gerar_grafico_mensal():
     plt.figure(figsize=(10, 5))
     plt.plot(dias, valores, color='#007bff')
     plt.scatter(dias, valores)
-    plt.title("Vendas do Mês")
+    plt.title(f"Vendas do Mês\n{user_creator}")
     plt.ylabel("Apurado em R$")
     plt.xlabel("Dia")
-    plt.savefig('staticfiles/images/grafico_mensal.png',
-                transparent=True, orientation='landscape')
+    try:
+        plt.savefig(f'{path}images/{user_creator}/grafico_mensal.png',
+                    transparent=True, orientation='landscape')
+    except FileNotFoundError:
+        os.makedirs(f'{path}images/{user_creator}/')
+        plt.savefig(f'{path}images/{user_creator}/grafico_mensal.png',
+                    transparent=True, orientation='landscape')
 
 
 def gerar_dict_ano():
@@ -101,14 +112,21 @@ def gerar_lista_ano_valores():
     return lista_valores
 
 
-def gerar_grafico_anual():
+def gerar_grafico_anual(user_creator):
+    path = "core" + settings.STATIC_URL if settings.DEBUG else str(settings.STATIC_ROOT) + "/"
+
     meses = ('Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
              'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro')
     valores = gerar_lista_ano_valores()
     plt.figure(figsize=(10, 5))
     plt.bar(meses, valores, color='#007bff')
-    plt.title("Vendas Este Ano")
+    plt.title(f"Vendas Este Ano\n{user_creator}")
     plt.ylabel("Apurado em R$")
     plt.xticks(rotation=30)
-    plt.savefig('staticfiles/images/grafico_anual.png',
-                transparent=True, orientation='landscape')
+    try:
+        plt.savefig(f'{path}images/{user_creator}/grafico_anual.png',
+                    transparent=True, orientation='landscape')
+    except FileNotFoundError:
+        os.makedirs(f'{path}images/{user_creator}/')
+        plt.savefig(f'{path}images/{user_creator}/grafico_anual.png',
+                    transparent=True, orientation='landscape')

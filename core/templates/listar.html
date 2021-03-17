@@ -1,6 +1,7 @@
 {% extends "layout.html" %} {% load bootstrap4 %} {% load static %}
 <!---->
 {% block content %}
+{% bootstrap_messages %}
 <h1>Todos os Produtos</h1>
 {% for produto in produtos %}
 <div
@@ -19,26 +20,20 @@
       <b><p class="card-title">{{ produto.nome }}</p></b>
     </div>
     <p class="card-text">
-      R${{ produto.preco }} <br />
+      R$ {{ produto.preco }} <br />
       Em estoque: {{ produto.quant }}<br />
       Quantidade Minima: {{ produto.quant_minima }}
     </p>
     <form
-      action="{% url 'editar' %}"
+      action="{% url 'editar' produto.id %}"
       method="post"
       class="form"
       autocomplete="off"
       enctype="multipart/form-data"
     >
       {% csrf_token %}
-      <input
-      type="hidden"
-      name="nome"
-      value="{{ produto.nome }}"
-      id="id_nome"
-      >
       <button type="submit" class="btn btn-primary">Editar</button>
     </form>
   </div>
 </div>
-{% endfor %} {% endblock %}
+{% endfor %} {% bootstrap_javascript jquery='full' %} {% endblock %}

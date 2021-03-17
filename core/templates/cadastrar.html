@@ -1,4 +1,4 @@
-{% extends "layout.html" %} {% load bootstrap4 %}
+{% extends "layout.html" %} {% load bootstrap4 %} {% load static %}
 <!---->
 {% block content %}
 <h1>Cadastrar Produtos</h1>
@@ -12,7 +12,9 @@
 >
   {% csrf_token %}
   {% bootstrap_form form %}
+  <input type="hidden" name="user_id" required="" id="id_user">
   <div class="form-group">
+    <h4>Imagem do Produto</h4>
     {{ formimagem.imagem }}
   </div>
   {% buttons %}

@@ -34,20 +34,24 @@ def deslogar_usuario(request):
 
 @login_required(login_url='/login')
 def index(request):
-    t_mes = Thread(gerar_grafico_mensal())
-    t_ano = Thread(gerar_grafico_anual())
+    user_creator = request.user
+    t_mes = Thread(gerar_grafico_mensal(user_creator))
+    t_ano = Thread(gerar_grafico_anual(user_creator))
     t_mes.start()
     t_ano.start()
-    return render(request, "index.html")
+    context = {
+        'user': user_creator
+    }
+    return render(request, "index.html", context)
 
 
 @login_required(login_url='/login')
 def vender(request):
-    formvenda = VendaModelForm(request.POST or None)
+    formvenda = VendaModelForm(request.user, request.POST or None)
     if str(request.method) == "POST":
         if formvenda.is_valid():
-            formvenda.save()
-            formvenda = VendaModelForm()
+            formvenda.registrar(request.user)
+            formvenda = VendaModelForm(request.user)
             messages.success(request, "Venda Realizada com Sucesso")
 
         else:
@@ -62,32 +66,48 @@ def vender(request):
 def cadastrar(request):
     formproduto = ProdutoModelForm(request.POST or None)
     formimagem = ImagemModelForm(request.FILES or None)
+
     if str(request.method) == "POST":
         if formproduto.is_valid():
+            pk = formproduto.registrar(request.user)
+            formproduto = ProdutoModelForm()
+
+            messages.success(request, "Produto cadastrado com sucesso!")
+
             if formimagem.is_valid():
                 imagem = Imagem(imagem=request.FILES['imagem'])
-                imagem.titulo = request.POST['nome']
+                imagem.titulo = "p_" + str(pk)
                 imagem.salvar()
                 formimagem = ImagemModelForm()
-            formproduto.save()
-            formproduto = ProdutoModelForm()
-            messages.success(request, "Produto cadastrado com sucesso!")
         else:
             messages.error(request, "Produto não pode ser cadastrado.")
     context = {
         'form': formproduto,
-        'formimagem': formimagem
+        'formimagem': formimagem,
+        'user_id': request.user.id
     }
     return render(request, "cadastrar.html", context)
 
 
 @login_required(login_url='/login')
+def listar(request):
+    user_creator = request.user
+    produtos = list(map(add_estado, Produto.objects.filter(user=user_creator)))
+    produtos.sort(key=attrgetter('nome'))
+    context = {
+        'produtos': produtos
+    }
+    return render(request, "listar.html", context)
+
+
+@login_required(login_url='/login')
 def buscar(request):
+    user_creator = request.user
     formbusca = BuscarModelForm(request.POST or None)
     produtos = None
     if str(request.method) == "POST":
         if formbusca.is_valid():
-            produtos = formbusca.get_produtos()
+            produtos = formbusca.get_produtos(user_creator)
             if produtos:
                 formbusca = BuscarModelForm()
                 produtos = list(map(add_estado, produtos))
@@ -102,71 +122,41 @@ def buscar(request):
 
 
 @permission_required('', login_url='/admin/login/?next=/editar/')
-def editar(request):
-    formbusca = BuscarModelForm(request.POST or None)
-    formproduto = ProdutoModelForm(request.POST or None)
+def editar(request, pk):
+    produto = Produto.objects.get(id=pk)
+
+    data = produto.to_json()
+
+    formproduto = ProdutoModelForm(data or None)
     formimagem = ImagemModelForm(request.FILES or None)
-    nome = None
-    found = False
+
     if str(request.method) == "POST":
-        if len(request.POST) == 2:
-            if formbusca.is_valid():
-                if formbusca.get_produtos():
-                    produto_json = formbusca.get_produto_json()
-                    formproduto = ProdutoModelForm(produto_json)
-                    formbusca = BuscarModelForm()
-                    nome = produto_json["nome"]
-                    found = True
-                else:
-                    messages.error(request, "Produto Não Encontrado")
-        else:
-            if formproduto.is_valid():
-                old_name = request.POST['old_name']
+        if formproduto.is_valid() and len(request.POST) == 7:
+            produto.nome = request.POST["nome"]
+            produto.preco = request.POST["preco"]
+            produto.quant = request.POST["quant"]
+            produto.quant_minima = request.POST["quant_minima"]
 
-                formproduto = ProdutoModelForm(request.POST)
-                produto = Produto.objects.filter(nome=old_name)
-                if produto:
-                    produto = produto[0]
-                    produto.nome = request.POST["nome"]
-                    produto.preco = request.POST["preco"]
-                    produto.quant = request.POST["quant"]
-                    produto.quant_minima = request.POST["quant_minima"]
-                    produto.save()
+            produto.save()
+            formproduto = ProdutoModelForm(data)
+            messages.success(request, "Alterações Salvas")
 
-                messages.success(request, "Alterações Salvas")
-                if formimagem.is_valid():
-                    imagem = Imagem(imagem=request.FILES['imagem'])
-                    imagem.titulo = old_name
-                    imagem.salvar()
-                    formimagem = ImagemModelForm()
-                else:
-                    imagem = Imagem()
-                    imagem.titulo = old_name
-                    if old_name != produto.nome:
-                        imagem.renomear(produto.nome)
+        if formimagem.is_valid():
+            imagem = Imagem(imagem=request.FILES['imagem'])
+            imagem.titulo = "p_" + str(pk)
+            imagem.salvar()
+            formimagem = ImagemModelForm()
     context = {
-        'formbusca': formbusca,
         'formproduto': formproduto,
         'formimagem': formimagem,
-        'nome': nome,
-        'found': found
+        'produto': produto,
     }
     return render(request, "editar.html", context)
 
 
-@login_required(login_url='/login')
-def listar(request):
-    produtos = list(map(add_estado, Produto.objects.all()))
-    produtos.sort(key=attrgetter('nome'))
-    context = {
-        'produtos': produtos
-    }
-    return render(request, "listar.html", context)
-
-
 @permission_required('', login_url='/admin/login/?next=/deletar/')
 def deletar(request, pk):
-    Produto.objects.filter(nome=pk).delete()
+    Produto.objects.filter(id=pk).delete()
     imagem = Imagem()
     imagem.titulo = pk
     try:
@@ -174,4 +164,4 @@ def deletar(request, pk):
     except FileNotFoundError:
         pass
     messages.info(request, "Produto Excluido")
-    return redirect('editar')
+    return redirect('listar')

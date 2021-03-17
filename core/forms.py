@@ -41,8 +41,8 @@ def get_produtos_json(nome_produto):
     return produtos
 
 
-def get_produtos_produto(nome_produto):
-    return Produto.objects.filter(nome__icontains=nome_produto)
+def get_produtos_produto(nome_produto, user_creator):
+    return Produto.objects.filter(nome__icontains=nome_produto, user=user_creator)
 
 
 def checar_produto(nome_produto, quant=-1):
@@ -58,6 +58,12 @@ def checar_produto(nome_produto, quant=-1):
 
 
 class ProdutoModelForm(forms.ModelForm):
+    def registrar(self, user):
+        p = self.save(commit=False)
+        p.user = user
+        p.save()
+        return p.id
+
     class Meta:
         model = Produto
         fields = ['nome', 'preco', 'quant', 'quant_minima']
@@ -65,7 +71,7 @@ class ProdutoModelForm(forms.ModelForm):
             'nome': "",
             'preco': "",
             'quant': "",
-            'quant_minima': ""
+            'quant_minima': "",
         }
         help_texts = {
             'nome': "Nome",
@@ -76,6 +82,12 @@ class ProdutoModelForm(forms.ModelForm):
 
 
 class VendaModelForm(forms.ModelForm):
+    def registrar(self, user):
+        v = self.save(commit=False)
+        v.user = user
+        v.save()
+        return v.id
+
     class Meta:
         model = Venda
         fields = ['produto_id', 'quant', 'desconto']
@@ -90,6 +102,10 @@ class VendaModelForm(forms.ModelForm):
             'quant': "Quantidade",
         }
 
+    def __init__(self, user, *args, **kwargs):
+        super(VendaModelForm, self).__init__(*args, **kwargs)
+        self.fields['produto_id'].queryset = Produto.objects.filter(user=user)
+
 
 class BuscarModelForm(forms.Form):
     nome = ModeloCharField('Nome do Produto', 50)
@@ -97,6 +113,6 @@ class BuscarModelForm(forms.Form):
     def get_produto_json(self):
         return get_produto_json(self.cleaned_data['nome'])
 
-    def get_produtos(self):
-        produtos = get_produtos_produto(self.cleaned_data['nome'])
+    def get_produtos(self, user_creator):
+        produtos = get_produtos_produto(self.cleaned_data['nome'], user_creator)
         return produtos
