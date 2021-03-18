@@ -85,26 +85,28 @@ class VendaModelForm(forms.ModelForm):
     def registrar(self, user):
         v = self.save(commit=False)
         v.user = user
+        v.produto.quant -= v.quant
         v.save()
+        v.produto.save()
         return v.id
 
     class Meta:
         model = Venda
-        fields = ['produto_id', 'quant', 'desconto']
+        fields = ['produto', 'quant', 'desconto']
         labels = {
-            'produto_id': "",
+            'produto': "",
             'desconto': "",
             'quant': "",
         }
         help_texts = {
-            'produto_id': "Produto",
+            'produto': "Produto",
             'desconto': "Desconto",
             'quant': "Quantidade",
         }
 
     def __init__(self, user, *args, **kwargs):
         super(VendaModelForm, self).__init__(*args, **kwargs)
-        self.fields['produto_id'].queryset = Produto.objects.filter(user=user)
+        self.fields['produto'].queryset = Produto.objects.filter(user=user)
 
 
 class BuscarModelForm(forms.Form):

@@ -40,7 +40,8 @@ def index(request):
     t_mes.start()
     t_ano.start()
     context = {
-        'user': user_creator
+        'url_anual': "images/" + str(user_creator.username) + "/grafico_anual.png",
+        'url_mensal': "images/" + str(user_creator.username) + "/grafico_mensal.png",
     }
     return render(request, "index.html", context)
 

@@ -19,8 +19,8 @@ def add_estado(item):
     return item
 
 
-def get_vendas():
-    return Venda.objects.all()
+def get_vendas(user):
+    return Venda.objects.filter(user=user)
 
 
 def get_mes_atual():
@@ -49,10 +49,10 @@ def gerar_dict_mes():
     return mapa
 
 
-def gerar_lista_mes_valores():
+def gerar_lista_mes_valores(user):
     mes_atual = get_mes_atual()
     dias_mes = gerar_dict_mes()
-    vendas = get_vendas()
+    vendas = get_vendas(user)
     vendas_json = list(map(lambda x: x.to_json(), vendas))
     vendas_mes_atual = list(
         filter(lambda i: i['criado'].strftime("%m") == mes_atual, vendas_json))
@@ -68,7 +68,7 @@ def gerar_lista_mes_valores():
 def gerar_grafico_mensal(user_creator):
     path = "core" + settings.STATIC_URL if settings.DEBUG else str(settings.STATIC_ROOT) + "/"
 
-    valores = gerar_lista_mes_valores()
+    valores = gerar_lista_mes_valores(user_creator)
     dias = list()
     for x in gerar_dict_mes():
         dias.append(x)
@@ -96,10 +96,10 @@ def gerar_dict_ano():
     return meses
 
 
-def gerar_lista_ano_valores():
+def gerar_lista_ano_valores(user_creator):
     ano_atual = get_ano_atual()
     ano_dict = gerar_dict_ano()
-    vendas = get_vendas()
+    vendas = get_vendas(user_creator)
     vendas_json = list(map(lambda x: x.to_json(), vendas))
     vendas_ano_atual = list(
         filter(lambda i: i['criado'].strftime("%Y") == ano_atual, vendas_json))
@@ -117,7 +117,7 @@ def gerar_grafico_anual(user_creator):
 
     meses = ('Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
              'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro')
-    valores = gerar_lista_ano_valores()
+    valores = gerar_lista_ano_valores(user_creator)
     plt.figure(figsize=(10, 5))
     plt.bar(meses, valores, color='#007bff')
     plt.title(f"Vendas Este Ano\n{user_creator}")

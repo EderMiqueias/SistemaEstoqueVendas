@@ -3,13 +3,13 @@
 {% block content %}
 <h3>Resumo do Mês</h3>
 <img
-  src="{% static "images/s"|stringformat:user|stringformat:"s/grafico_mensal.png" %}"
+  src="{% static url_mensal %}"
   class="img-fluid"
   alt="Resumo do Mes"
 />
 <h3>Resumo Anual</h3>
 <img
-  src="{% static "images/s"|stringformat:user|stringformat:"s/grafico_anual.png" %}"
+  src="{% static url_anual %}"
   class="img-fluid"
   alt="Resumo anual"
 />

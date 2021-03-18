@@ -2,7 +2,6 @@ from django.db import models
 from django.conf import settings
 
 from PIL import Image
-import shutil
 import os
 import platform
 
@@ -20,6 +19,7 @@ class Base(models.Model):
 
 
 class Imagem(models.Model):
+    use_in_migrations = False
     imagem = models.ImageField()
     titulo = None
 
@@ -70,22 +70,22 @@ class Produto(Base):
 
 
 class Venda(Base):
-    produto_id = models.ForeignKey(Produto, on_delete=models.CASCADE)
+    produto = models.ForeignKey(Produto, on_delete=models.CASCADE)
     quant = models.IntegerField('Quantidade')
     desconto = models.FloatField('Desconto')
 
     def __str__(self):
-        return f"{self.produto_id} | {self.valor} | {self.quant}"
+        return f"{self.produto} | {self.valor} | {self.quant}"
 
     @property
     def valor(self):
-        return (self.produto_id.preco * self.quant) - self.desconto
+        return (self.produto.preco * self.quant) - self.desconto
 
     def to_json(self):
         return {
             'id': self.id,
             'valor': self.valor,
-            'nome_produto': self.produto_id,
+            'nome_produto': self.produto,
             'quant': self.quant,
             'desconto': self.desconto,
             'criado': self.criado,
