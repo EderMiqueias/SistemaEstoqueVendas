@@ -1,6 +1,6 @@
 # SistemaEstoqueVendas
 
-Sistema de cadastro e vendas usando [django](https://www.djangoproject.com/), [MongoDB](https://www.mongodb.com/), [Bootstrap4](https://getbootstrap.com/) e [Matplotlib](https://matplotlib.org/)
+Sistema de cadastro e vendas usando [django](https://www.djangoproject.com/), [SQLite3](https://www.sqlite.org/index.html), [Bootstrap4](https://getbootstrap.com/) e [Matplotlib](https://matplotlib.org/)
 
 # Linux
 ### Instalação
